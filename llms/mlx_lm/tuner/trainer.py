@@ -63,16 +63,16 @@ class TrainingArgs:
     )
 
 
-def default_loss(model, inputs, targets, lengths):
+def default_loss(model, inputs, targets, lengths,filled_lengths):
     logits, _ = model(inputs)
     logits = logits.astype(mx.float32)
 
-    length_mask = mx.arange(inputs.shape[1])[None, :] < lengths[:, None]
-
+    length_mask =  (mx.arange(inputs.shape[1])[None, :] >= filled_lengths[:, None]) & (mx.arange(inputs.shape[1])[None, :] < lengths[:, None])
+    
     ce = nn.losses.cross_entropy(logits, targets) * length_mask
     ntoks = length_mask.sum()
     ce = ce.sum() / ntoks
-
+    
     return ce, ntoks
 
 
@@ -94,8 +94,10 @@ def iterate_batches(dataset, tokenizer, batch_size, max_seq_length, train=False)
         indices = np.random.permutation(len(batch_idx))
         for i in indices:
             # Encode batch
+
             batch = [tokenizer.encode(dataset[j]) for j in batch_idx[i]]
             lengths = [len(x) for x in batch]
+            filled_lens = [dataset[j].get('filled_len', 0) for j in batch_idx[i]]      
 
             if max(lengths) > max_seq_length:
                 print(
@@ -119,7 +121,7 @@ def iterate_batches(dataset, tokenizer, batch_size, max_seq_length, train=False)
                 )
             batch = mx.array(batch_arr)
 
-            yield batch[:, :-1], batch[:, 1:], mx.array(lengths)
+            yield batch[:, :-1], batch[:, 1:], mx.array(lengths),mx.array(filled_lens)
 
         if not train:
             break

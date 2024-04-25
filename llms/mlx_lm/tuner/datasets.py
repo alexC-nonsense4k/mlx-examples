@@ -14,7 +14,7 @@ class Dataset:
             self._data = [json.loads(l) for l in fid]
 
     def __getitem__(self, idx: int):
-        return self._data[idx]["text"]
+        return {"text": self._data[idx]["text"] }
 
     def __len__(self):
         if self._data is None:
@@ -37,7 +37,7 @@ class ChatDataset(Dataset):
         text = self._tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        return text
+        return {"text":text}
 
 
 class CompletionsDataset(Dataset):
@@ -60,7 +60,32 @@ class CompletionsDataset(Dataset):
             tokenize=False,
             add_generation_prompt=True,
         )
-        return text
+        return {"text":text}
+
+class QuestionADataset(Dataset):
+    def __init__(self, path: Path, tokenizer: PreTrainedTokenizer):
+        super().__init__(path)
+        self._tokenizer = tokenizer
+    def __getitem__(self, idx: int):
+        data=self._data[idx]
+        qa = self._tokenizer.apply_chat_template(
+            [
+                {"role": "user", "content": data["question"]},
+                {"role": "assistant", "content": data["answer"]},
+            ],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+        question = self._tokenizer.apply_chat_template(
+            [
+                {"role": "user", "content": data["question"]},
+            ],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+        filled_len= len(self._tokenizer.encode(question))
+        return {"text":qa,"filled_len":filled_len}
+
 
 
 def create_dataset(path: Path, tokenizer: PreTrainedTokenizer = None):
@@ -76,6 +101,8 @@ def create_dataset(path: Path, tokenizer: PreTrainedTokenizer = None):
         return CompletionsDataset(path, tokenizer)
     elif "text" in first_obj:
         return Dataset(path)
+    elif "question" in first_obj:
+        return QuestionADataset(path,tokenizer)
     else:
         raise ValueError(
             "Unsupported data format, check the supported formats here:\n"
