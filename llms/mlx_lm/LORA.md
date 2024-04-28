@@ -177,11 +177,17 @@ Currently, `*.jsonl` files support three data formats: `chat`,
 ```jsonl
 {"text": "This is an example for the model."}
 ```
+`QuestionA`:
+
+```jsonl
+{"question": "What is the color of the sky","answer":"It is blue!"}
+```
+
 
 Note, the format is automatically determined by the dataset. Note also, keys in
 each line not expected by the loader will be ignored.
 
-For the `chat` and `completions` formats, Hugging Face [chat
+For the `chat`, `completions` and `QuestionA`formats, Hugging Face [chat
 templates](https://huggingface.co/blog/chat-templates) are used. This applies
 the model's chat template by default. If the model does not have a chat
 template, then Hugging Face will use a default. For example, the final text in

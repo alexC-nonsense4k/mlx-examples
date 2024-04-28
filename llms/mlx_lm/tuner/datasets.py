@@ -101,7 +101,7 @@ def create_dataset(path: Path, tokenizer: PreTrainedTokenizer = None):
         return CompletionsDataset(path, tokenizer)
     elif "text" in first_obj:
         return Dataset(path)
-    elif "question" in first_obj:
+    elif "question" in first_obj and "answer" in first_obj:
         return QuestionADataset(path,tokenizer)
     else:
         raise ValueError(
