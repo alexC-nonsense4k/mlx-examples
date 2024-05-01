@@ -95,7 +95,7 @@ def iterate_batches(dataset, tokenizer, batch_size, max_seq_length, train=False)
         for i in indices:
             # Encode batch
 
-            batch = [tokenizer.encode(dataset[j]) for j in batch_idx[i]]
+            batch = [tokenizer.encode(dataset[j]['text']) for j in batch_idx[i]]
             lengths = [len(x) for x in batch]
             filled_lens = [dataset[j].get('filled_len', 0) for j in batch_idx[i]]      
 
